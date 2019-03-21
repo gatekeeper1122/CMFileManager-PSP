@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 extern bool playing, paused;
+char title[31], artist[31];
 
 void Audio_Init(const char *path);
 void Audio_Decode(void *buf, unsigned int length, void *userdata);

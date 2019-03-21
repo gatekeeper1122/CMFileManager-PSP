@@ -2,12 +2,65 @@
 #define DR_FLAC_IMPLEMENTATION
 #include "dr_flac.h"
 #include "fs.h"
+#include "textures.h"
 
 static drflac *flac;
 static drflac_uint64 frames_read = 0;
 
+static void FLAC_SplitVorbisComments(char *comment, char *tag, char *value){
+	char *result = NULL;
+	result = strtok(comment, "=");
+	int count = 0;
+
+	while((result != NULL) && (count < 2)) {
+		if (strlen(result) > 0) {
+			switch (count) {
+				case 0:
+					strncpy(tag, result, 30);
+					tag[30] = '\0';
+					break;
+				case 1:
+					strncpy(value, result, 255);
+					value[255] = '\0';
+					break;
+			}
+
+			count++;
+		}
+		result = strtok(NULL, "=");
+	}
+}
+
+static void FLAC_MetaCallback(void *pUserData, drflac_metadata *pMetadata) {
+	char tag[31];
+	char value[256];
+	
+	if (pMetadata->type == DRFLAC_METADATA_BLOCK_TYPE_VORBIS_COMMENT) {
+		drflac_vorbis_comment_iterator iterator;
+		drflac_uint32 comment_length;
+		const char *comment_str;
+
+		drflac_init_vorbis_comment_iterator(&iterator, pMetadata->data.vorbis_comment.commentCount, pMetadata->data.vorbis_comment.pComments);
+
+		while((comment_str = drflac_next_vorbis_comment(&iterator, &comment_length)) != NULL) {
+			FLAC_SplitVorbisComments((char *)comment_str, tag, value);
+			if (!strcasecmp(tag, "TITLE")) {
+				strcpy(title, value);
+			}
+			if (!strcasecmp(tag, "ARTIST")) {
+				strcpy(artist, value);
+			}
+		}
+	}
+	if (pMetadata->type == DRFLAC_METADATA_BLOCK_TYPE_PICTURE) {
+		if (pMetadata->data.picture.type == DRFLAC_PICTURE_TYPE_COVER_FRONT) {
+			cover_image = g2dTexLoadMemory((drflac_uint8 *)pMetadata->data.picture.pPictureData, pMetadata->data.picture.pictureDataSize, G2D_SWIZZLE);
+		}
+	}
+}
+
 int FLAC_Init(const char *path) {
-	flac = drflac_open_file(path);
+	flac = drflac_open_file_with_metadata(path, FLAC_MetaCallback, NULL);
 	if (flac == NULL)
 		return -1;
 

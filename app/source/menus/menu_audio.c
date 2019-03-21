@@ -56,10 +56,12 @@ void Menu_PlayAudio(const char *path) {
 		StatusBar_DisplayTime();
 
 		intraFontSetStyle(font, 0.7f, WHITE, G2D_RGBA(0, 0, 0, 0), 0.f, INTRAFONT_ALIGN_LEFT);
-		intraFontPrint(font, 40, 22 + ((40 - (font->texYSize - 30)) / 2), strupr(Utils_Basename(path)));
+		intraFontPrint(font, 40, 15 + ((40 - (font->texYSize - 30)) / 2), strupr(title));
+		intraFontPrint(font, 40, 29 + ((40 - (font->texYSize - 30)) / 2), strupr(artist));
 
 		G2D_DrawRect(0, 62, 200, 200, G2D_RGBA(97, 97, 97, 255));
-		G2D_DrawImage(default_artwork, 0, 62);
+		//G2D_DrawImage(default_artwork, 0, 62);
+		G2D_DrawImageScale(cover_image, 0, 62, 200, 200);
 
 		G2D_DrawRect(205, 62, 275, 200, G2D_RGBA(45, 48, 50, 255)); // Draw info box (outer)
 		G2D_DrawRect(210, 67, 265, 190, G2D_RGBA(46, 49, 51, 255)); // Draw info box (inner)
